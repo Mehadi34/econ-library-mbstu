@@ -38,6 +38,8 @@ interface AdminDashboardProps {
   onUpdateBooks: (books: Book[]) => void;
   donors: Donor[];
   onUpdateDonors: (donors: Donor[]) => void;
+  news: import('../types').NewsItem[];
+  onUpdateNews: (news: import('../types').NewsItem[]) => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ 
@@ -47,14 +49,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   books,
   onUpdateBooks,
   donors,
-  onUpdateDonors
+  onUpdateDonors,
+  news,
+  onUpdateNews
 }) => {
   const { t, lang } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'books' | 'donors' | 'requests' | 'users' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'books' | 'donors' | 'requests' | 'news' | 'users' | 'settings'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [modalType, setModalType] = useState<'book' | 'donor'>('book');
+  const [modalType, setModalType] = useState<'book' | 'donor' | 'news'>('book');
   
   // Mock Requests
   const [requests, setRequests] = useState<PreBookRequest[]>([
@@ -110,6 +114,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  const handleCreateNews = () => {
+    setModalType('news');
+    setEditingItem({ title: '', content: '', date: new Date().toISOString().split('T')[0], category: 'Notice', important: false });
+    setIsModalOpen(true);
+  };
+
+  const handleEditNews = (n: import('../types').NewsItem) => {
+    setModalType('news');
+    setEditingItem(n);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteNews = (id: string) => {
+    if (confirm('Delete this news item?')) {
+      onUpdateNews(news.filter(n => n.id !== id));
+    }
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (modalType === 'book') {
@@ -118,11 +140,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       } else {
         onUpdateBooks([{ ...editingItem, id: Date.now().toString() }, ...books]);
       }
-    } else {
+    } else if (modalType === 'donor') {
       if (editingItem.id) {
         onUpdateDonors(donors.map(d => d.id === editingItem.id ? editingItem : d));
       } else {
         onUpdateDonors([{ ...editingItem, id: Date.now().toString() }, ...donors]);
+      }
+    } else if (modalType === 'news') {
+      if (editingItem.id) {
+        onUpdateNews(news.map(n => n.id === editingItem.id ? editingItem : n));
+      } else {
+        onUpdateNews([{ ...editingItem, id: Date.now().toString() }, ...news]);
       }
     }
     setIsModalOpen(false);
@@ -151,6 +179,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
             { id: 'books', label: 'Book Library', icon: BookOpen },
             { id: 'donors', label: 'Donors & Charity', icon: Heart },
+            { id: 'news', label: 'Blog & News', icon: Bell },
             { id: 'requests', label: 'Pre-book Orders', icon: Package },
             { id: 'users', label: 'Users & Roles', icon: Users },
             { id: 'settings', label: 'System Settings', icon: Settings },
@@ -432,6 +461,60 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </motion.div>
               )}
 
+              {activeTab === 'news' && (
+                <motion.div key="news" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                   <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-black text-gray-900">News & Notice Management</h3>
+                      <button 
+                        onClick={handleCreateNews}
+                        className="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-xs font-black shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                      >
+                        <Plus size={16} /> Create Article
+                      </button>
+                   </div>
+
+                   <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                      <table className="w-full text-left">
+                        <thead className="bg-gray-50 border-b border-gray-100">
+                          <tr>
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Title</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Priority</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {news.map((item) => (
+                            <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                              <td className="px-6 py-4 text-xs font-bold text-gray-500">{item.date}</td>
+                              <td className="px-6 py-4">
+                                <span className="text-sm font-black text-gray-900">{item.title}</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[10px] font-black uppercase">{item.category}</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                {item.important ? (
+                                  <span className="px-2 py-1 bg-red-50 text-red-600 rounded text-[10px] font-black uppercase">Urgent</span>
+                                ) : (
+                                  <span className="text-[10px] font-bold text-gray-300">Normal</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                  <button onClick={() => handleEditNews(item)} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Edit2 size={14} /></button>
+                                  <button onClick={() => handleDeleteNews(item.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={14} /></button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                   </div>
+                </motion.div>
+              )}
+
               {activeTab === 'requests' && (
                 <motion.div key="requests" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -639,7 +722,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </div>
                           </div>
                         </>
-                       ) : (
+                       ) : modalType === 'donor' ? (
                         <div className="grid grid-cols-1 gap-6">
                            <div className="flex flex-col items-center mb-8">
                               <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-50 shadow-xl mb-4">
@@ -711,6 +794,66 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 className="w-5 h-5 rounded-md border-gray-300 text-blue-600 focus:ring-blue-500"
                               />
                               <label htmlFor="verified" className="text-xs font-black text-blue-700 uppercase tracking-widest cursor-pointer">Official Verified Account</label>
+                           </div>
+                        </div>
+                       ) : (
+                        <div className="grid grid-cols-1 gap-6">
+                           <div>
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Article Title</label>
+                              <input 
+                                  type="text"
+                                  required
+                                  value={editingItem?.title || ''}
+                                  onChange={e => setEditingItem({...editingItem, title: e.target.value})}
+                                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-5 py-4 text-sm font-black focus:bg-white outline-none transition-all"
+                              />
+                           </div>
+
+                           <div className="grid grid-cols-2 gap-6">
+                              <div>
+                                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Category</label>
+                                  <select 
+                                    value={editingItem?.category || 'Notice'}
+                                    onChange={e => setEditingItem({...editingItem, category: e.target.value as any})}
+                                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3.5 text-sm font-bold outline-none"
+                                  >
+                                    <option>Notice</option>
+                                    <option>Event</option>
+                                    <option>Update</option>
+                                  </select>
+                              </div>
+                              <div>
+                                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Publish Date</label>
+                                  <input 
+                                    type="date"
+                                    required
+                                    value={editingItem?.date || ''}
+                                    onChange={e => setEditingItem({...editingItem, date: e.target.value})}
+                                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-5 py-3.5 text-sm font-medium focus:bg-white outline-none"
+                                  />
+                              </div>
+                           </div>
+
+                           <div>
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Content / Body</label>
+                              <textarea 
+                                  rows={10}
+                                  value={editingItem?.content || ''}
+                                  onChange={e => setEditingItem({...editingItem, content: e.target.value})}
+                                  className="w-full bg-gray-50 border border-gray-100 rounded-[1.5rem] px-5 py-4 text-sm font-medium focus:bg-white outline-none resize-none"
+                                  placeholder="Write article content here..."
+                              />
+                           </div>
+
+                           <div className="flex items-center gap-3 bg-red-50 p-4 rounded-xl">
+                              <input 
+                                type="checkbox"
+                                id="important"
+                                checked={editingItem?.important || false}
+                                onChange={e => setEditingItem({...editingItem, important: e.target.checked})}
+                                className="w-5 h-5 rounded-md border-red-300 text-red-600 focus:ring-red-500"
+                              />
+                              <label htmlFor="important" className="text-xs font-black text-red-700 uppercase tracking-widest cursor-pointer">Mark as Important Notice</label>
                            </div>
                         </div>
                        )}

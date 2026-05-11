@@ -1537,7 +1537,68 @@ export default function App() {
 
 function AppContent() {
   const { t } = useLanguage();
-  const [books, setBooks] = useState<Book[]>([]);
+  const [books, setBooks] = useState<Book[]>([
+    {
+      id: "1",
+      title: "কুফর তাকফির বিদআত-প্রান্তিকতা ও ভারসাম্যহীনতা",
+      author: "মূল: শায়খ সালিহ আল ফাওযান",
+      category: "Islam",
+      isbn: "978-0133836790",
+      description: "Islamic study on various aspects.",
+      cover: "https://www.rokomari.com/static/200/products/n/357908_1701323385.jpg",
+      totalCopies: 10,
+      availableCopies: 8,
+      location: "Shelf A1"
+    },
+    {
+      id: "2",
+      title: "নিদৃত শুভকামনা",
+      author: "কামরুল আহসান",
+      category: "General",
+      isbn: "978-1305971493",
+      description: "General literature.",
+      cover: "https://www.rokomari.com/static/200/products/n/357909_1701323385.jpg",
+      totalCopies: 15,
+      availableCopies: 12,
+      location: "Shelf A2"
+    },
+    {
+      id: "3",
+      title: "ফেরারি সময়",
+      author: "সৈয়দ রানা",
+      category: "Poetry",
+      isbn: "978-1107146525",
+      description: "A collection of poems.",
+      cover: "https://www.rokomari.com/static/200/products/n/357910_1701323385.jpg",
+      totalCopies: 5,
+      availableCopies: 5,
+      location: "Shelf A3"
+    },
+    {
+      id: "4",
+      title: "দাস হয়েও মহা মনীষী যারা",
+      author: "মাওলানা সাঈদ আহমদ",
+      category: "Islam",
+      isbn: "978-0691235899",
+      description: "Biographies of great personalities.",
+      cover: "https://www.rokomari.com/static/200/products/n/357911_1701323385.jpg",
+      totalCopies: 8,
+      availableCopies: 3,
+      location: "Shelf B1"
+    },
+    {
+      id: "5",
+      title: "বিশ্বায়নের যুগে ইসলাম উৎসাহ এবং সত্যতা",
+      author: "প্রফেসর ড. সৈয়দ কামরুল",
+      category: "Islam",
+      isbn: "978-0070108134",
+      description: "Islam in the era of globalization.",
+      cover: "https://www.rokomari.com/static/200/products/n/357912_1701323385.jpg",
+      totalCopies: 12,
+      availableCopies: 10,
+      location: "Shelf B2"
+    }
+  ]);
   const [donors, setDonors] = useState<Donor[]>([
     { id: '1', name: 'Dr. Md. Shahjahan', role: 'Chief Advisor', amount: '৳৫০০০/মাস', verified: true, img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80', email: 'shajahan@mbstu.ac.bd' },
     { id: '2', name: 'Tahmid Ahmed', role: 'Gold Member', amount: '৳২০০০/মাস', verified: true, img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80', email: 'tahmid@gmail.com' },
@@ -1545,7 +1606,36 @@ function AppContent() {
     { id: '4', name: 'Mehedi Hasan', role: 'Donor', amount: '৳৫০০/মাস', verified: false, img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80' },
   ]);
   const [stats, setStats] = useState<LibraryStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [news, setNews] = useState<NewsItem[]>([
+    { id: '1', title: 'Library Hours Extended', content: 'We are now open until 8 PM on weekdays.', date: '2026-05-10', category: 'Update', important: true },
+    { id: '2', title: 'New Economics Journals Arrived', content: 'The latest issues of Econometrica are now available.', date: '2026-05-09', category: 'Notice', important: false },
+  ]);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedBooks = localStorage.getItem('econ_library_books');
+    if (savedBooks) setBooks(JSON.parse(savedBooks));
+    
+    const savedDonors = localStorage.getItem('econ_library_donors');
+    if (savedDonors) setDonors(JSON.parse(savedDonors));
+    
+    const savedNews = localStorage.getItem('econ_library_news');
+    if (savedNews) setNews(JSON.parse(savedNews));
+  }, []);
+
+  // Save to localStorage when states change
+  useEffect(() => {
+    localStorage.setItem('econ_library_books', JSON.stringify(books));
+  }, [books]);
+
+  useEffect(() => {
+    localStorage.setItem('econ_library_donors', JSON.stringify(donors));
+  }, [donors]);
+
+  useEffect(() => {
+    localStorage.setItem('econ_library_news', JSON.stringify(news));
+  }, [news]);
+
   const [activeCategory, setActiveCategory] = useState('All');
   const [activeAuthor, setActiveAuthor] = useState('All');
   const [user, setUser] = useState<User | null>(null);
@@ -1648,6 +1738,8 @@ function AppContent() {
         onUpdateBooks={setBooks}
         donors={donors}
         onUpdateDonors={setDonors}
+        news={news}
+        onUpdateNews={setNews}
       />
     );
   }
@@ -1756,7 +1848,10 @@ function AppContent() {
       <LoginModal 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
-        onLogin={(u) => setUser(u)} 
+        onLogin={(u) => {
+          setUser(u);
+          if (u.role === 'admin') setIsAdminDashboardOpen(true);
+        }} 
         onJoinClick={() => setIsMembershipModalOpen(true)}
       />
 
@@ -2055,14 +2150,20 @@ function AppContent() {
                 </li>
                 <li className="flex items-center gap-3"><Phone size={18} className="text-blue-600 shrink-0" /> 01880412129</li>
                 <li className="flex items-center gap-3"><Mail size={18} className="text-blue-600 shrink-0" /> Eco24034@mbstu.com</li>
-                <li>
-                  <button 
-                    onClick={() => setIsLoginModalOpen(true)}
-                    className="text-[10px] text-gray-200 hover:text-gray-400 transition-colors cursor-pointer"
-                  >
-                    Error
-                  </button>
-                </li>
+                  <li>
+                    <button 
+                      onClick={() => {
+                        if (user?.role === 'admin') {
+                          setIsAdminDashboardOpen(true);
+                        } else {
+                          setIsLoginModalOpen(true);
+                        }
+                      }}
+                      className="text-[10px] text-gray-300 hover:text-gray-400 font-bold transition-colors cursor-pointer"
+                    >
+                      Error Report
+                    </button>
+                  </li>
               </ul>
             </div>
 

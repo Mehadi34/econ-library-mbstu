@@ -46,3 +46,12 @@ export interface PreBookRequest {
   requestDate: string;
 }
 
+export interface NewsItem {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
+  category: 'Notice' | 'Event' | 'Update';
+  important: boolean;
+}
+
