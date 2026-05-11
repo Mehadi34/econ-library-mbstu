@@ -29,7 +29,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import { Book, LibraryStats, User } from './types';
+import { Book, LibraryStats, User, Donor, NewsItem } from './types';
 import { useLanguage, LanguageProvider } from './LanguageContext';
 import { AdminDashboard } from './components/AdminDashboard';
 
@@ -42,16 +42,20 @@ const BookDetailModal = ({
   onClose, 
   book,
   onAddToCart,
-  isInCart
+  isInCart,
+  user
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   book: Book | null;
   onAddToCart: (book: Book) => void;
   isInCart: boolean;
+  user: User | null;
 }) => {
   const { t } = useLanguage();
   if (!book) return null;
+
+  const hasAccess = user?.email && /^ECO\d{5}@mbstu\.ac\.bd$/i.test(user.email);
 
   return (
     <AnimatePresence>
@@ -130,6 +134,19 @@ const BookDetailModal = ({
               </div>
 
               <div className="mt-10 flex gap-4">
+                {book.ebookUrl && (
+                  <button 
+                    onClick={() => window.open(book.ebookUrl, '_blank')}
+                    disabled={!hasAccess}
+                    className={`flex-1 py-5 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all shadow-xl ${
+                      hasAccess 
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20' 
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <BookOpen size={20} /> {hasAccess ? 'Read Online' : 'E-book Restricted'}
+                  </button>
+                )}
                 <button 
                   onClick={() => onAddToCart(book)}
                   disabled={isInCart}
@@ -146,6 +163,11 @@ const BookDetailModal = ({
                   )}
                 </button>
               </div>
+              {!hasAccess && book.ebookUrl && (
+                <p className="mt-4 text-[10px] text-center font-bold text-gray-400 bg-gray-50 p-3 rounded-xl">
+                  University students with <span className="text-blue-500">ECOxxxxx@mbstu.ac.bd</span> get free e-book access.
+                </p>
+              )}
             </div>
           </motion.div>
         </div>
@@ -1852,6 +1874,7 @@ function AppContent() {
         book={selectedBook}
         onAddToCart={handleAddToCart}
         isInCart={!!selectedBook && !!cart.find(item => item.id === selectedBook.id)}
+        user={user}
       />
       
       <LoginModal 

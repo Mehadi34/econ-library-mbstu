@@ -16,6 +16,7 @@ export interface Book {
   totalCopies: number;
   availableCopies: number;
   location: string;
+  ebookUrl?: string;
 }
 
 export interface LibraryStats {
