@@ -1,6 +1,6 @@
 {
   "name": "Econ-Library (MBSTU)",
-  "description": "The official digital and physical library management system for the Department of Economics at Mawlana Bhashani Science and Technology University (MBSTU).",
+  "description": "The official digital and physical library management system for the Department of Economics at Mawlana Bhashani Science and Technology University (MBSTU). Optimized for Vercel deployment.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }
